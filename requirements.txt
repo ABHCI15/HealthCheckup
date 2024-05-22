@@ -1,0 +1,12 @@
+streamlit
+google-generativeai
+pandas
+matplotlib
+numpy
+plotly
+google-cloud-firestore
+requests
+langchain-google-genai
+langchain
+langchain_experimental
+tabulate
