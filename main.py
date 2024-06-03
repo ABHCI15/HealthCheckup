@@ -14,11 +14,11 @@ from langchain_google_genai import (
 
 
 
-st.title('Congressional App Challennge 2024')
+st.title('Congressional App Challenge 2024')
 
 element = st.chat_input('Enter your message here')
 
-llm = GoogleGenerativeAI()
+llm = GoogleGenerativeAI(model="models/gemini-1.5-pro-latest", temperature=0.1, google_api_key=st.secrets["API_GEMINI"], safety_settings={ HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE, HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE, HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE})
 
 with element:
     if element:
