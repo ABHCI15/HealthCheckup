@@ -11,3 +11,5 @@ langchain
 langchain_experimental
 tabulate
 firebase-admin
+pyzbar
+pillow
