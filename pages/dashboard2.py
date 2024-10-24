@@ -8,7 +8,7 @@ from firebase_admin import credentials, db
 import smtplib
 import google.generativeai as genai
 import os
-import smtplib
+
 
 
 # Function to extract username from email
@@ -78,6 +78,32 @@ if 'user_info' in st.session_state:
     st.write(f"You are currently tracking {product_count} products.")
 
     # Camera input for barcode scanning
+    st.header("Scan or enter a product barcode to check for recalls")
+    upc_inp = st.text_input("Enter UPC code")
+    submit_upc = st.button("Submit UPC")
+    if submit_upc:
+        upc_code = upc_inp
+        st.write(f"UPC code entered: {upc_code}")
+        
+        # Add UPC to Firebase
+        result = add_UPC(upc_code, uid, db)
+        st.write(result)
+
+        # Recall check
+        os.system("curl https://www.saferproducts.gov/RestWebServices/Recall?format=json > output.json")
+        with open("output.json", 'r') as f:
+            recalls = json.load(f)
+        recall_matches = find_matching_recall(recalls, upc_code)
+
+        if recall_matches:
+            st.error("Product has been recalled!")
+            for recall in recall_matches:
+                st.write(f"Description: {recall['Description']}")
+                st.write(recall2msg(recall))
+        else:
+            st.success("Product is safe.")
+            
+    st.write("OR")
     enable = st.checkbox("Enable camera")
     cam = st.camera_input("Scan barcode", disabled=not enable)
 
@@ -109,15 +135,12 @@ if 'user_info' in st.session_state:
     # Section for users to provide contact information for notifications
     st.write("Enter your contact information to get notified if any of your products are recalled.")
     
-    notification_type = st.radio("Notification method", ["Email", "Phone"])
+    # notification_type = st.radio("Notification method", ["Email", "Phone"])
     
-    if notification_type == "Email":
-        if st.button("Submit Email"):
-            send_notification("Email", st.session_state['user_info']['email'], "You will be notified of any recalls.")
-    else:
-        phone_input = st.text_input("Enter your phone number")
-        if st.button("Submit Phone"):
-            send_notification("Phone", phone_input, "You will be notified of any recalls.")
+
+    if st.button("Submit Email"):
+        send_notification("Email", st.session_state['user_info']['email'], "You will be notified of any recalls.")
+
 
     # Button for signing out
     if st.button("Sign Out"):
