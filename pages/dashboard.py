@@ -4,6 +4,8 @@ from PIL import Image
 
 import numpy as np
 
+st.title("Welcome to your dashboard")
+
 cam = st.camera_input("Scan barcode")
 
 if cam is not None:
