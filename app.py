@@ -18,7 +18,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-st.title("Congressional App Challenge 2024")
+st.title("RecallScan")
 placeholder = st.empty()
 placeholder.header("Login to access the app")
 
@@ -82,6 +82,8 @@ else:
     password = st.text_input(label='Confirm your password',type='password')
     st.button(label='Delete Account',on_click=auth_functions.delete_account,args=[password],type='primary')
     dash_switch = st.button(label='Proceed to dashboard')
-    sleep_Switch =st.button("Sleep Analysis")
+    sleep_Switch =st.button("Chat")
     if dash_switch:
         st.switch_page("pages/dashboard.py")
+    if sleep_Switch:
+        st.switch_page("pages/chat.py")

@@ -32,6 +32,23 @@ from langchain_core.prompts import PromptTemplate
 from langchain_community.tools import WikipediaQueryRun, ArxivQueryRun
 from langchain_community.utilities import WikipediaAPIWrapper
 import re
+import os 
+import json
+from langchain.pydantic_v1 import BaseModel, Field
+from langchain.tools import BaseTool, StructuredTool, tool
+
+@tool
+def find_matching_recall(upc_code: str) -> list:
+    """ Inputting a 12 digit upc code as a string will return a list of recalls that match the upc code, if the upc code is not present in the database, the list will be empty. """
+    os.system("curl https://www.saferproducts.gov/RestWebServices/Recall?format=json > output.json")
+    with open("output.json", 'r') as f:
+        recalls = json.load(f)
+    matches = []
+    for recall in recalls:
+        for product_upc in recall['ProductUPCs']:
+            if product_upc['UPC'] == upc_code:
+                matches.append(recall)
+    return matches
 
 
 tool_wikipedia = WikipediaQueryRun(api_wrapper=WikipediaAPIWrapper())
@@ -57,7 +74,7 @@ def email_to_username(email):
     return re.sub(r'@.*$', '', email)
 
 if 'user_info' in st.session_state:
-    st.title(f"Hello there {email_to_username(st.session_state['user_info']['email'])} 👋! Feel free to ask any medical questions you have.")
+    st.title(f"Hello there {email_to_username(st.session_state['user_info']['email'])} 👋! I'm here to assist you with your products!")
     
 
 
@@ -75,7 +92,7 @@ if 'user_info' in st.session_state:
             ("placeholder", "{agent_scratchpad}"),
         ]
     )
-    tools = [tool_med, tool_search, tool_wikipedia, tool_wikidata, tool_arxiv]
+    tools = [tool_med, tool_search, tool_wikipedia, tool_wikidata, tool_arxiv, find_matching_recall]
     # prompt.format(tools=tools, tool_names=[tool.name for tool in tools])
     llm = ChatGoogleGenerativeAI(model="models/gemini-1.5-pro-exp-0827", temperature=0.5, google_api_key=st.secrets["api_key"], safety_settings={ HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE, HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE, HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE})
     # llm.bind_tools(tools)

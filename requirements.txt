@@ -13,3 +13,8 @@ tabulate
 firebase-admin
 pyzbar
 pillow
+wikipedia
+mediawikiapi
+wikibase-rest-api-client
+xmltodict
+arxiv

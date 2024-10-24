@@ -9,7 +9,15 @@ import smtplib
 import google.generativeai as genai
 import os
 
-
+def debugEmail():
+    upc_debug =  708953651019
+    os.system("curl https://www.saferproducts.gov/RestWebServices/Recall?format=json > output.json")
+    with open("output.json", 'r') as f:
+        recalls = json.load(f)
+    recall_matches = find_matching_recall(recalls, upc_debug)
+    for recall in recall_matches:
+        send_notification("Email", st.session_state['user_info']['email'], recall2msg(recall))
+    st.success("Email sent")
 
 # Function to extract username from email
 def email_to_username(email):
@@ -19,7 +27,7 @@ def recall2msg(recall):
     genai.configure(api_key=st.secrets['api_key'])
     genai_model = genai.GenerativeModel(model_name='models/gemini-1.5-pro-latest')
     prompt = f"Product with UPC {recall['ProductUPCs'][0]['UPC']} has been recalled of the user guide them to properly deal with the recalled product in the form of a brief paragraph with the following information from the recall database: {recall}"
-    response = genai_model.generate(prompt)
+    response = genai_model.generate_content(prompt)
     return response.text
 
 def add_UPC(upc, uid, db):
@@ -42,7 +50,7 @@ def add_UPC(upc, uid, db):
 def send_notification(notification_type, contact_info, message):
     if notification_type == "Email":
         recipient = contact_info
-        auth = (st.secrets('EMAIL'), st.secrets('PASSWORD'))
+        auth = (st.secrets['EMAIL'], st.secrets['PASSWORD'])
         server = smtplib.SMTP("smtp.gmail.com", 587)
         server.starttls()
         server.login(auth[0], auth[1])
@@ -146,4 +154,5 @@ if 'user_info' in st.session_state:
     if st.button("Sign Out"):
         st.session_state.pop('user_info', None)
         st.experimental_rerun()
+    
 
