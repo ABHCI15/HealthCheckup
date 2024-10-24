@@ -81,9 +81,7 @@ else:
     st.header('Delete account:')
     password = st.text_input(label='Confirm your password',type='password')
     st.button(label='Delete Account',on_click=auth_functions.delete_account,args=[password],type='primary')
-    med_switch = st.button(label='Medical Q/A chatbot')
+    dash_switch = st.button(label='Proceed to dashboard')
     sleep_Switch =st.button("Sleep Analysis")
-    if sleep_Switch:
-        st.switch_page("pages/sleep.py")
-    if med_switch:
-        st.switch_page("pages/medHelp.py")
+    if dash_switch:
+        st.switch_page("pages/dashboard.py")
