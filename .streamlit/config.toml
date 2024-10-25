@@ -1,6 +1,6 @@
 [theme]
-primaryColor = "#001f3f"   # Navy color
-backgroundColor = "#ffffff"  # Light background
-secondaryBackgroundColor = "#f0f0f0"  # Lighter gray background
-textColor = "#000000"  # Black text
+primaryColor = "#001f3f"   
+backgroundColor = "#ffffff" 
+secondaryBackgroundColor = "#f0f0f0"  
+textColor = "#000000"  
 font = "sans serif"
