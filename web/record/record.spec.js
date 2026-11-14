@@ -26,12 +26,16 @@ test("demo walk-through", async ({ page, request }) => {
   await page.getByTestId("recalled").waitFor();
   await pause(4000);
 
-  await page.getByTestId("scan-0025000051753").click();
-  await page.getByTestId("interaction").first().getByText("Evidence").click();
+  await page.getByTestId("scan-0826520107322").click();
+  const card = page.getByTestId("interaction").filter({ hasText: "VKORC1" }).first();
+  await card.getByText("Evidence").click();
   await pause(1500);
-  await page.getByRole("button", { name: "view in 3D and open design brief" }).first().click();
-  await page.getByTestId("structure-name").waitFor();
-  await pause(7000);
+  await card.getByRole("button", { name: "see where warfarin meets VKORC1 in 3D" }).click();
+  await page.getByTestId("bound").waitFor();
+  await pause(6000);
+  await page.getByTestId("protein3d").scrollIntoViewIfNeeded();
+  await pause(5000);
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: "smooth" }));
 
   await page.getByRole("button", { name: "Near me" }).click();
   await page.getByTestId("signal").first().waitFor();

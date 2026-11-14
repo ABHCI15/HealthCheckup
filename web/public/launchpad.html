@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HealthCheckup</title>
+<meta name="description" content="Scan what you swallow. See what it does to your medicines, at the protein level.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blue:#002676; --blue-deep:#001a52;
+  --gold:#FDB515; --gold-deep:#C4820E;
+  --paper:#f8f7f2; --ink:#0f1b3d; --muted:#5b6785;
+  --card:#ffffff; --line:#e4e2d8; --green:#2e7d4f;
+  --radius:14px;
+  --shadow:0 1px 2px rgba(15,27,61,.05),0 8px 24px rgba(15,27,61,.07);
+  --serif:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --sans:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.6;overflow-x:hidden}
+h1,h2,h3{font-family:var(--serif);line-height:1.15;margin:0;text-wrap:balance}
+p{margin:0}
+a{color:var(--blue)}
+:focus-visible{outline:3px solid var(--gold);outline-offset:3px;border-radius:6px}
+.hero :focus-visible{outline-color:#fff}
+.wrap{width:100%;max-width:1080px;margin:0 auto;padding:0 20px}
+.skip{position:absolute;left:-9999px;top:8px;background:#fff;color:var(--blue);padding:8px 12px;border-radius:8px;z-index:10}
+.skip:focus{left:8px}
+
+/* Hero */
+.hero{background:linear-gradient(160deg,var(--blue) 0%,var(--blue-deep) 100%);color:#fff;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;right:-140px;top:-140px;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(253,181,21,.22),rgba(253,181,21,0) 70%);pointer-events:none}
+.hero .wrap{position:relative;z-index:1;display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center;padding-top:72px;padding-bottom:80px}
+.brand{display:inline-flex;align-items:center;gap:10px;font-weight:600;letter-spacing:.02em;font-size:15px;color:var(--gold);margin-bottom:22px}
+.brand span.dot{width:10px;height:10px;border-radius:50%;background:var(--gold)}
+.hero h1{font-size:clamp(40px,7vw,68px);font-weight:700;letter-spacing:-.01em}
+.hero .lede{font-family:var(--serif);font-size:clamp(19px,2.6vw,25px);line-height:1.35;margin-top:18px;color:#e6ebf7;max-width:30ch}
+.cta{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:center;margin-top:32px}
+.btn{display:inline-block;background:var(--gold);color:var(--blue-deep);font-weight:700;text-decoration:none;padding:14px 26px;border-radius:999px;font-size:16px;box-shadow:0 6px 18px rgba(0,0,0,.25);transition:transform .15s ease,background .15s ease}
+.btn:hover{background:#ffc53d;transform:translateY(-1px)}
+.link{color:#fff;font-weight:600;text-underline-offset:4px;text-decoration-color:var(--gold);text-decoration-thickness:2px}
+.link:hover{color:var(--gold)}
+.figure{background:#fff;border-radius:var(--radius);padding:18px 14px 12px;box-shadow:0 18px 48px rgba(0,0,0,.3);margin:0}
+.figure svg{display:block;width:100%;height:auto}
+.figure figcaption{color:var(--muted);font-size:13px;text-align:center;margin-top:6px}
+
+/* Sections */
+section{padding:64px 0}
+section.tight{padding:48px 0}
+.eyebrow{font-size:12.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-deep);margin-bottom:10px}
+/* gold-deep on paper is ~3.3:1; darken for small text */
+.eyebrow{color:#8a5a06}
+h2{font-size:clamp(28px,4vw,38px);font-weight:600;color:var(--blue)}
+.sub{color:var(--muted);margin-top:10px;max-width:62ch}
+.problem p{font-family:var(--serif);font-size:clamp(20px,2.8vw,26px);line-height:1.45;max-width:36em;margin-top:14px}
+.grid{display:grid;gap:18px;margin-top:30px;grid-template-columns:repeat(3,minmax(0,1fr))}
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px;border:1px solid rgba(15,27,61,.05);min-width:0}
+.card h3{font-size:20px;font-weight:600;color:var(--ink);margin-bottom:8px}
+.card p{color:#3d4866;font-size:15px}
+.card .num{font-family:var(--serif);font-weight:700;color:var(--blue);font-size:14px;display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:#eef1f9;margin-bottom:12px}
+.card.wide{grid-column:span 2}
+.quote{font-style:italic}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.9em;background:#eef1f9;color:var(--blue-deep);padding:1px 5px;border-radius:5px}
+
+.steps{counter-reset:s;list-style:none;padding:0;margin:30px 0 0;display:grid;gap:18px;grid-template-columns:repeat(3,minmax(0,1fr))}
+.steps li{counter-increment:s;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px;border-top:4px solid var(--gold)}
+.steps li::before{content:"Step " counter(s);display:block;font-size:12.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#8a5a06;margin-bottom:6px}
+.steps h3{font-size:21px;color:var(--blue);margin-bottom:6px}
+.steps p{color:#3d4866;font-size:15px}
+
+.band{background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.sources{list-style:none;padding:0;margin:20px 0 0;display:flex;flex-wrap:wrap;gap:10px}
+.sources li{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:7px 14px;font-size:14px;font-weight:600;color:var(--blue-deep)}
+
+.next .card{border:1px dashed #c9b88a;box-shadow:none;background:#fffdf6}
+.tag{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:#fff0c9;color:#6b4500;border:1px solid #e9c66f;padding:3px 9px;border-radius:999px;margin-bottom:12px}
+.next .card p{color:var(--ink);font-size:15.5px}
+
+.limits{list-style:none;padding:0;margin:22px 0 0;display:grid;gap:12px;max-width:760px}
+.limits li{background:var(--card);border-left:4px solid var(--blue);border-radius:10px;padding:14px 18px;box-shadow:var(--shadow)}
+
+footer{background:var(--blue-deep);color:#dfe5f5;padding:34px 0;font-size:14.5px}
+footer .wrap{display:flex;flex-wrap:wrap;gap:10px 24px;justify-content:space-between;align-items:center}
+footer a{color:#fff;text-decoration-color:var(--gold);text-underline-offset:4px}
+footer strong{font-family:var(--serif);font-size:18px;color:#fff}
+
+/* Reveal */
+.js .reveal{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s ease}
+.js .reveal.in{opacity:1;transform:none}
+.pulse{transform-origin:210px 70px;animation:pulse 2.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.55;transform:scale(1)}50%{opacity:0;transform:scale(1.25)}}
+
+@media (max-width:900px){
+  .hero .wrap{grid-template-columns:1fr;gap:36px;padding-top:52px;padding-bottom:56px}
+  .grid,.steps{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:600px){
+  section{padding:48px 0}
+  .wrap{padding:0 16px}
+  .grid,.steps{grid-template-columns:1fr}
+  .card.wide{grid-column:auto}
+  .btn{width:100%;text-align:center}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .js .reveal{opacity:1;transform:none;transition:none}
+  .pulse{animation:none;opacity:.35}
+  .btn{transition:none}
+  .btn:hover{transform:none}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="hero">
+  <div class="wrap">
+    <div>
+      <div class="brand"><span class="dot" aria-hidden="true"></span>Recalls, interactions, proteins</div>
+      <h1>HealthCheckup</h1>
+      <p class="lede">Scan what you swallow. See what it does to your medicines, at the protein level.</p>
+      <div class="cta">
+        <a class="btn" href="/">Open the app</a>
+        <a class="link" href="https://github.com/ABHCI15/HealthCheckup/tree/hackathon-rebuild" rel="noopener">View the code</a>
+      </div>
+    </div>
+
+    <figure class="figure">
+      <svg viewBox="0 0 420 160" role="img" aria-labelledby="figt figd">
+        <title id="figt">Grapefruit and simvastatin meet at the protein CYP3A4</title>
+        <desc id="figd">Grapefruit inhibits CYP3A4. Simvastatin is broken down by CYP3A4.</desc>
+        <defs>
+          <marker id="ah-g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#2e7d4f"/></marker>
+          <marker id="ah-b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#002676"/></marker>
+        </defs>
+        <!-- edges -->
+        <line x1="94" y1="70" x2="162" y2="70" stroke="#2e7d4f" stroke-width="2.5" marker-end="url(#ah-g)"/>
+        <line x1="326" y1="70" x2="258" y2="70" stroke="#002676" stroke-width="2.5" marker-end="url(#ah-b)"/>
+        <text x="128" y="56" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-size="12" font-weight="600" fill="#2e7d4f">inhibits</text>
+        <text x="292" y="56" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-size="12" font-weight="600" fill="#002676">broken down by</text>
+        <!-- nodes -->
+        <circle cx="62" cy="70" r="28" fill="#e6f3ea" stroke="#2e7d4f" stroke-width="2.5"/>
+        <circle cx="62" cy="70" r="9" fill="#2e7d4f"/>
+        <circle class="pulse" cx="210" cy="70" r="44" fill="none" stroke="#FDB515" stroke-width="3"/>
+        <circle cx="210" cy="70" r="40" fill="#FDB515" stroke="#C4820E" stroke-width="3"/>
+        <text x="210" y="75" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-size="14" font-weight="700" fill="#001a52">CYP3A4</text>
+        <circle cx="358" cy="70" r="28" fill="#e8ecf8" stroke="#002676" stroke-width="2.5"/>
+        <circle cx="358" cy="70" r="9" fill="#002676"/>
+        <!-- labels -->
+        <text x="62" y="124" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-size="13.5" font-weight="700" fill="#1f5e3a">Grapefruit</text>
+        <text x="210" y="138" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-size="12" font-weight="600" fill="#5b6785">shared protein</text>
+        <text x="358" y="124" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-size="13.5" font-weight="700" fill="#002676">Simvastatin</text>
+      </svg>
+      <figcaption>A food and a medicine, joined at the protein they both touch.</figcaption>
+    </figure>
+  </div>
+</header>
+
+<main id="main">
+
+<section class="problem tight">
+  <div class="wrap reveal">
+    <div class="eyebrow">The problem</div>
+    <h2>The warning is on the leaflet. The food is in your hand.</h2>
+    <p>Food warnings on medicines are small print on a leaflet. Nothing connects them to the food you are actually holding.</p>
+  </div>
+</section>
+
+<section class="band" id="today">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="eyebrow">Works today</div>
+      <h2>What the app does right now</h2>
+      <p class="sub">Everything in this section is built and running in the app.</p>
+    </div>
+    <div class="grid">
+      <article class="card reveal">
+        <div class="num" aria-hidden="true">1</div>
+        <h3>Recall check</h3>
+        <p>Looks a product up by barcode in CPSC, FDA food and FDA drug recall data, matching on the product's own code. It says <span class="quote">"no recall found in the sources that answered"</span>, never "safe".</p>
+      </article>
+      <article class="card reveal">
+        <div class="num" aria-hidden="true">2</div>
+        <h3>Food and medicine interactions</h3>
+        <p>Joins what a food component does to a protein with what the medicine does to the same protein, and draws it. Grapefruit and simvastatin meet at CYP3A4; leafy greens and warfarin meet at VKORC1.</p>
+      </article>
+      <article class="card reveal">
+        <div class="num" aria-hidden="true">3</div>
+        <h3>Where the drug binds</h3>
+        <p>Experimental structures of simvastatin in HMG-CoA reductase (PDB <code>1HW9</code>) and warfarin in VKORC1 (PDB <code>6WV3</code>), drawn with py2Dmol.</p>
+      </article>
+      <article class="card reveal">
+        <div class="num" aria-hidden="true">4</div>
+        <h3>Protein view and design brief</h3>
+        <p>The target's predicted structure from AlphaFold DB in an interactive three.js view, plus an exportable brief for a design run.</p>
+      </article>
+      <article class="card reveal">
+        <div class="num" aria-hidden="true">5</div>
+        <h3>Near me</h3>
+        <p>Recalls distributed in your US state and CDC respiratory illness activity.</p>
+      </article>
+      <article class="card reveal">
+        <div class="num" aria-hidden="true">6</div>
+        <h3>Watchlist</h3>
+        <p>A scheduler re-checks saved products and medicines for new recalls.</p>
+      </article>
+      <article class="card wide reveal">
+        <div class="num" aria-hidden="true">7</div>
+        <h3>Claude</h3>
+        <p>Writes a plain-language summary from the retrieved evidence and answers questions by calling five live tools. The same tools ship as an MCP server and a Claude Code skill.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="eyebrow">How it works</div>
+      <h2>Three steps</h2>
+    </div>
+    <ol class="steps">
+      <li class="reveal"><h3>Scan</h3><p>Take or upload a photo of a barcode, or type the number. The app reads the code, identifies the product and checks it against recall data.</p></li>
+      <li class="reveal"><h3>See where they meet</h3><p>Add your medicines. The app shows the protein a food and a medicine share, and where the drug binds.</p></li>
+      <li class="reveal"><h3>Stay covered</h3><p>Save items to the watchlist. They are re-checked for new recalls on a schedule.</p></li>
+    </ol>
+  </div>
+</section>
+
+<section class="band tight" id="sources">
+  <div class="wrap reveal">
+    <div class="eyebrow">Data sources</div>
+    <h2>Public data, named</h2>
+    <ul class="sources">
+      <li>FDA openFDA</li><li>CPSC</li><li>Open Food Facts</li><li>Open Targets</li><li>RxNorm</li><li>RCSB PDB</li><li>AlphaFold DB</li><li>UniProt</li><li>CDC</li>
+    </ul>
+  </div>
+</section>
+
+<section class="next" id="next">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="eyebrow">Next</div>
+      <h2>What comes after the hackathon</h2>
+      <p class="sub">None of the items below exist in the app yet. They are plans, not features.</p>
+    </div>
+    <div class="grid">
+      <article class="card reveal"><span class="tag">Not built yet</span><p>Connect an RFdiffusion-family design engine so a brief becomes candidate binders for a lab to test.</p></article>
+      <article class="card reveal"><span class="tag">Not built yet</span><p>Continuous live-video scanning. Today a still photo is read.</p></article>
+      <article class="card reveal"><span class="tag">Not built yet</span><p>Claude reading pill bottles and meals from photos.</p></article>
+      <article class="card reveal"><span class="tag">Not built yet</span><p>A larger cited food table. Today it covers 11 food effects.</p></article>
+      <article class="card reveal"><span class="tag">Not built yet</span><p>Recall alerts by email or text.</p></article>
+      <article class="card reveal"><span class="tag">Not built yet</span><p>USDA meat and poultry recalls. Its feed refuses automated access today.</p></article>
+    </div>
+  </div>
+</section>
+
+<section class="band tight" id="limits">
+  <div class="wrap reveal">
+    <div class="eyebrow">Limits</div>
+    <h2>What this is not</h2>
+    <ul class="limits">
+      <li>It shows information from public sources. It is not medical advice.</li>
+      <li>Designs would be research hypotheses, not treatments.</li>
+      <li>The app does not diagnose anyone.</li>
+    </ul>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div><strong>HealthCheckup</strong><br>Built at Hack With Claude, Track 02: Everyday Life.</div>
+    <div><a href="/">Open the app</a> &nbsp;&middot;&nbsp; <a href="https://github.com/ABHCI15/HealthCheckup/tree/hackathon-rebuild" rel="noopener">View the code</a></div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce || !('IntersectionObserver' in window)) return;
+  document.documentElement.classList.add('js');
+  var els = document.querySelectorAll('.reveal');
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if (e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); }
+    });
+  }, {rootMargin:'0px 0px -6% 0px', threshold:0.05});
+  els.forEach(function(el){ io.observe(el); });
+  setTimeout(function(){ els.forEach(function(el){ el.classList.add('in'); }); }, 2500);
+})();
+</script>
+</body>
+</html>

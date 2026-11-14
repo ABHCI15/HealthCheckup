@@ -31,6 +31,8 @@ Without an API key everything except the Claude features (summary, chat) still w
 | `healthcheck/drugs.py` | Drug targets from Open Targets, enzymes and food warnings from the FDA label, RxNorm |
 | `healthcheck/foodmap.py` | Curated table of food components and the proteins they act on |
 | `healthcheck/interactions.py` | Joins food effects and drug proteins into interactions |
+| `healthcheck/binding.py` | Curated drug-bound structures (PDB 1HW9, 6WV3) drawn with py2Dmol |
+| `web/public/launchpad.html` | Landing page: capabilities today and what is next (served at `/launchpad.html`) |
 | `healthcheck/structure.py` | Gene symbol → UniProt → AlphaFold DB structure |
 | `healthcheck/local.py` | Recalls distributed in a state, CDC respiratory illness activity |
 | `healthcheck/watch.py` | Scheduler that re-checks saved products and medicines for new recalls |
@@ -59,6 +61,6 @@ cd web && npx playwright test             # end to end, against live data source
 - USDA FSIS (meat, poultry, eggs) refuses automated access, so those recalls are linked, not checked.
 - The Protein design tab prepares a target and a job brief. No design engine is connected, so it
   does not generate designs.
-- The demo uses barcodes coded into the page. Camera scanning is not wired into the React app;
-  the photo decoder in `healthcheck/barcode.py` is tested on generated images only.
+- Barcodes are read from an uploaded or newly taken photo (`POST /api/decode`), or chosen from four coded demo
+  products. The photo decoder is tested on generated images, not on real phone photos.
 - Sign-in from the original app is switched off; data is stored locally in `.data/` for one guest user.

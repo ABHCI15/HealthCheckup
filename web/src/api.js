@@ -24,7 +24,14 @@ export const api = {
   save: (product) => request("/api/watchlist", json("POST", { product })),
   remove: (key) => request(`/api/watchlist/${encodeURIComponent(key)}`, { method: "DELETE" }),
   runWatch: () => request("/api/watch/run", { method: "POST" }),
+  async decode(file) {
+    const res = await fetch("/api/decode", { method: "POST", headers: { "Content-Type": file.type || "application/octet-stream" }, body: file });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body.detail || "The photo could not be read.");
+    return body;
+  },
   targets: () => request("/api/targets"),
+  binding: (drug, symbol) => request(`/api/binding?drug=${encodeURIComponent(drug)}&symbol=${encodeURIComponent(symbol)}`),
   structure: (symbol) => request(`/api/structure/${encodeURIComponent(symbol)}`),
   chat: (messages) => request("/api/chat", json("POST", { messages })),
   async explain(payload, onText) {

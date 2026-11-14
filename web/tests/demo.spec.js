@@ -88,6 +88,23 @@ test("an interaction links through to the protein in 3D", async ({ page }) => {
   await page.goto("/");
   await page.getByTestId("scan-0025000051753").click();
   await page.getByTestId("interaction").first().getByText("Evidence").click();
-  await page.getByRole("button", { name: "view in 3D and open design brief" }).first().click();
+  await page.getByRole("button", { name: "see where simvastatin meets CYP3A4 in 3D" }).click();
   await expect(page.getByTestId("structure-name")).toContainText("Cytochrome P450 3A4");
+  // No co-crystal of simvastatin in CYP3A4 is curated, so the app says so and points at HMGCR.
+  await expect(page.getByTestId("no-bound")).toContainText("No experimental structure");
+  await page.getByRole("button", { name: "open HMGCR" }).click();
+  await expect(page.getByTestId("bound")).toContainText("HMG-CoA reductase with simvastatin");
+});
+
+test("kale salad leads to warfarin bound in VKORC1, drawn with py2Dmol", async ({ page }) => {
+  await page.goto("/");
+  await page.getByTestId("scan-0826520107322").click();
+  const card = page.getByTestId("interaction").filter({ hasText: "VKORC1" }).first();
+  await card.getByText("Evidence").click();
+  await card.getByRole("button", { name: "see where warfarin meets VKORC1 in 3D" }).click();
+  await expect(page.getByTestId("bound")).toContainText("VKOR) with warfarin");
+  const frame = page.frameLocator('iframe[title*="bound to VKORC1"]');
+  await expect(frame.locator("canvas").first()).toBeVisible();
+  await page.waitForTimeout(1500);
+  await page.screenshot({ path: "test-results/bound.png", fullPage: true });
 });

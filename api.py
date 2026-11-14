@@ -7,12 +7,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse, StreamingResponse
+import io
+
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from healthcheck import ai, barcode, drugs, foodmap, interactions, local, products, recalls, store, structure, watch
+from healthcheck import ai, barcode, binding, drugs, foodmap, interactions, local, products, recalls, store, structure, watch
 from healthcheck.models import to_dict
 
 ROOT = Path(__file__).resolve().parent
@@ -103,6 +105,32 @@ def scan(q: str) -> dict:
             profile["food_evidence"] = []
         out["interactions"] = data
     return out
+
+
+@app.post("/api/decode")
+async def decode(request: Request) -> dict:
+    """Read a product barcode out of an uploaded photo. The body is the raw image bytes."""
+    from PIL import Image, UnidentifiedImageError
+
+    data = await request.body()
+    if not data:
+        raise HTTPException(400, "No image was uploaded.")
+    if len(data) > 25_000_000:
+        raise HTTPException(413, "That photo is larger than 25 MB.")
+    try:
+        image = Image.open(io.BytesIO(data))
+        image.load()
+    except (UnidentifiedImageError, OSError):
+        raise HTTPException(400, "That file is not an image this app can read. Use a JPEG or PNG.")
+    result = barcode.decode_image(image)
+    products_found = [d for d in result.detections if d.barcode.is_gtin]
+    if not products_found:
+        other = [d.barcode.raw[:60] for d in result.detections][:2]
+        hint = result.hint or "A code was read, but it is not a product barcode."
+        return {"found": False, "hint": hint, "stages_tried": len(result.stages_tried), "other_codes": other}
+    best = products_found[0]
+    return {"found": True, "code": best.barcode.upc, "symbology": best.barcode.symbology, "stage": best.stage,
+            "checksum_ok": best.barcode.checksum_ok, "note": best.barcode.note, "stages_tried": len(result.stages_tried)}
 
 
 class Meds(BaseModel):
@@ -203,7 +231,8 @@ def targets() -> dict:
     for med in store.meds(UID):
         for link in _profile(med).links:
             if not any(t["symbol"] == link.protein.symbol for t in out):
-                out.append({"symbol": link.protein.symbol, "name": link.protein.name, "drug": med, "relation": link.relation})
+                out.append({"symbol": link.protein.symbol, "name": link.protein.name, "drug": med, "relation": link.relation,
+                            "bound": binding.lookup(med, link.protein.symbol) is not None})
     return {"targets": out[:16]}
 
 
@@ -215,10 +244,31 @@ def protein_structure(symbol: str) -> dict:
     return data
 
 
+@app.get("/api/binding")
+def bound_structure(drug: str = "", symbol: str = "") -> dict:
+    """The experimental structure of this drug in this protein, plus the drug's other bound structures."""
+    return {"match": binding.lookup(drug, symbol) if drug and symbol else None,
+            "others": [b for b in binding.for_drug(drug) if b["symbol"] != symbol.upper()] if drug else []}
+
+
+@app.get("/api/binding-view/{pdb_id}", response_class=HTMLResponse)
+def bound_view(pdb_id: str) -> str:
+    try:
+        return binding.viewer_html(pdb_id)
+    except KeyError:
+        raise HTTPException(404, "No curated structure with that id.")
+    except Exception as exc:
+        raise HTTPException(502, f"Could not build the structure view: {exc.__class__.__name__}")
+
+
 DIST = ROOT / "web" / "dist"
 if DIST.exists():
     app.mount("/assets", StaticFiles(directory=DIST / "assets"), name="assets")
 
     @app.get("/{path:path}", include_in_schema=False)
     def spa(path: str):
+        # Serve real files from the build (for example launchpad.html); everything else is the app.
+        candidate = (DIST / path).resolve()
+        if path and candidate.is_file() and DIST.resolve() in candidate.parents:
+            return FileResponse(candidate)
         return FileResponse(DIST / "index.html")

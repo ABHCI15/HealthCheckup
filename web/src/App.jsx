@@ -7,7 +7,7 @@ import Protein3D from "./Protein3D.jsx";
 // Barcodes coded in for the demo. Each is a real product code that the live sources recognise.
 const CODED = [
   { code: "0025000051753", name: "Simply Grapefruit juice", note: "Food · meets statins at CYP3A4" },
-  { code: "0826520107322", name: "Kale and spinach salad", note: "Food · meets warfarin at VKORC1" },
+  { code: "0826520107322", name: "Kale and spinach salad", note: "Food · meets warfarin at VKORC1, with the drug-bound structure" },
   { code: "840059614922", name: "Hampton Bay ceiling fan", note: "Recalled by CPSC" },
   { code: "810123980659", name: "Blue Bottle blossom syrup", note: "Recalled by FDA" },
 ];
@@ -123,7 +123,7 @@ function Interactions({ report, title, onTarget }) {
                 </ul>
                 {i.vias.filter(isProtein).map((v) => (
                   <p key={v} className="meta">
-                    {v}: <button className="link" onClick={() => onTarget(v)}>view in 3D and open design brief</button>{" · "}<a href={`https://www.uniprot.org/uniprotkb?query=gene_exact:${v}+AND+organism_id:9606`} target="_blank" rel="noreferrer">UniProt</a>
+                    {v}: <button className="link" onClick={() => onTarget(v, i.drug)}>see where {i.drug} meets {v} in 3D</button>{" · "}<a href={`https://www.uniprot.org/uniprotkb?query=gene_exact:${v}+AND+organism_id:9606`} target="_blank" rel="noreferrer">UniProt</a>
                     {" · "}
                     <a href={`https://alphafold.ebi.ac.uk/search/text/${v}?organismScientificName=Homo%20sapiens`} target="_blank" rel="noreferrer">structure on AlphaFold DB</a>
                   </p>
@@ -219,6 +219,21 @@ function ScanTab({ status, setMeds, onTarget }) {
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
   const [saved, setSaved] = useState("");
+  const [photo, setPhoto] = useState(null);
+
+  const onPhoto = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // Allow choosing the same photo again.
+    if (!file) return;
+    setPhoto({ busy: true }); setError(""); setResult(null);
+    try {
+      const read = await api.decode(file);
+      setPhoto(read);
+      if (read.found) run(read.code);
+    } catch (err) {
+      setPhoto({ found: false, hint: err.message });
+    }
+  };
 
   const run = async (q) => {
     setBusy(q); setError(""); setSaved("");
@@ -241,6 +256,19 @@ function ScanTab({ status, setMeds, onTarget }) {
         </div>
         <div className="panel">
           <h3>Scan a product</h3>
+          <label className="photo-drop">
+            <input type="file" accept="image/*" capture="environment" onChange={onPhoto} data-testid="photo-input" />
+            <span className="photo-title">Scan from a photo</span>
+            <span className="meta">Take or choose a photo of the barcode. It is read on the server.</span>
+          </label>
+          {photo && (
+            <p className={`photo-result${photo.found ? " ok" : ""}`} data-testid="photo-result" role="status">
+              {photo.busy ? "Reading the barcode from the photo…"
+                : photo.found ? `Read ${photo.symbology} ${photo.code}${photo.stage && photo.stage !== "original" ? ` (needed: ${photo.stage})` : ""}${photo.checksum_ok ? "" : ". " + photo.note}`
+                : `${photo.hint}${photo.stages_tried ? ` Tried ${photo.stages_tried} image treatments.` : ""}`}
+            </p>
+          )}
+          <p className="meta or">or use a coded demo barcode</p>
           <div className="coded">
             {CODED.map((c) => (
               <button key={c.code} className={`coded-card${busy === c.code ? " busy" : ""}`} onClick={() => run(c.code)} disabled={!!busy} data-testid={`scan-${c.code}`}>
@@ -448,14 +476,19 @@ function ChatTab({ status }) {
   );
 }
 
-function DesignTab({ target, setTarget }) {
+function DesignTab({ target, setTarget, drug, setDrug }) {
   const [targets, setTargets] = useState([]);
   const [draft, setDraft] = useState("");
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
   const [goal, setGoal] = useState("binder");
   const [length, setLength] = useState("60-100");
+  const [bound, setBound] = useState({ match: null, others: [] });
 
+  useEffect(() => {
+    setBound({ match: null, others: [] });
+    if (target && drug) api.binding(drug, target).then(setBound).catch(() => {});
+  }, [target, drug]);
   useEffect(() => { api.targets().then((r) => setTargets(r.targets)).catch(() => setTargets([])); }, []);
   useEffect(() => {
     if (!target) return;
@@ -484,7 +517,7 @@ function DesignTab({ target, setTarget }) {
   return (
     <div className="page wide">
       <h2>Protein design</h2>
-      <p className="meta">Step 2 of the project. Pick a protein your medicines act on, inspect its structure, and export the brief a design run needs.</p>
+      <p className="meta">Step 2 of the project. Start from an interaction: see where the medicine binds its protein, inspect the target on its own, then export the brief a design run needs.</p>
       <div className="banner warn" data-testid="design-limit">
         <b>The design engine is not connected.</b> This build prepares the target and the job brief for an RFdiffusion-family run; it does not generate or evaluate designs, and it does not diagnose anyone. Any design is a research hypothesis, not a treatment.
       </div>
@@ -492,17 +525,48 @@ function DesignTab({ target, setTarget }) {
         <h3>Target</h3>
         <div className="quick">
           {targets.map((t) => (
-            <button key={t.symbol} className={`pill${target === t.symbol ? " on" : ""}`} onClick={() => setTarget(t.symbol)} title={`${t.name} · ${t.relation} · ${t.drug}`}>{t.symbol}</button>
+            <button key={t.symbol} className={`pill${target === t.symbol ? " on" : ""}`} onClick={() => { setTarget(t.symbol); setDrug(t.drug); }} title={`${t.name} · ${t.relation} · ${t.drug}`}>{t.symbol}{t.bound ? " ●" : ""}</button>
           ))}
           {targets.length === 0 && <span className="meta">Add medicines to list their proteins here, or type a gene symbol.</span>}
+          {targets.some((t) => t.bound) && <span className="meta">● a structure with the medicine bound is available</span>}
         </div>
-        <form className="typed" onSubmit={(e) => { e.preventDefault(); if (draft.trim()) setTarget(draft.trim().toUpperCase()); }}>
+        <form className="typed" onSubmit={(e) => { e.preventDefault(); if (draft.trim()) { setTarget(draft.trim().toUpperCase()); setDrug(""); } }}>
           <input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Human gene symbol, for example CYP3A4" aria-label="Gene symbol" />
           <button className="btn" type="submit">Load structure</button>
         </form>
       </div>
       {error && <div className="banner danger">{error}</div>}
       {target && !data && !error && <div className="loading"><span className="scanner" />Fetching the structure of {target} from UniProt and AlphaFold DB…</div>}
+      {target && drug && (
+        <section className="story">
+          <h3>1 · Where {drug} binds {target}</h3>
+          {bound.match ? (
+            <div className="bound" data-testid="bound">
+              <iframe title={`${bound.match.ligand_name} bound to ${target}`} src={`/api/binding-view/${bound.match.pdb}`} />
+              <div className="panel">
+                <p><b>{bound.match.title}</b></p>
+                <p>{bound.match.note}</p>
+                <table>
+                  <tbody>
+                    <tr><td>Bound molecule</td><td>{bound.match.ligand_name} ({bound.match.ligand})</td></tr>
+                    <tr><td>Method</td><td>{bound.match.method}</td></tr>
+                    <tr><td>Entry</td><td><a href={bound.match.rcsb_url} target="_blank" rel="noreferrer">PDB {bound.match.pdb}</a> · <a href={bound.match.paper_url} target="_blank" rel="noreferrer">paper</a></td></tr>
+                  </tbody>
+                </table>
+                <p className="meta">Experimental structure with the medicine bound, drawn with py2Dmol. Drag to turn.</p>
+              </div>
+            </div>
+          ) : (
+            <div className="banner info" data-testid="no-bound">
+              No experimental structure of {drug} bound to {target} is in our checked set, so none is shown.
+              {bound.others.map((o) => (
+                <span key={o.pdb}> {drug} is bound to its own target in one: <button className="link" onClick={() => setTarget(o.symbol)}>open {o.symbol}</button>.</span>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+      {data && <h3 className="story-head">{drug ? "2" : "1"} · The target on its own, and {drug ? "3" : "2"} · the design brief</h3>}
       {data && (
         <div className="design">
           <div className="viewer">
@@ -554,7 +618,8 @@ export default function App() {
   const [tab, setTab] = useState("Scan");
   const [error, setError] = useState("");
   const [target, setTarget] = useState("");
-  const openTarget = (symbol) => { setTarget(symbol); setTab("Protein design"); window.scrollTo(0, 0); };
+  const [drug, setDrug] = useState("");
+  const openTarget = (symbol, forDrug = "") => { setTarget(symbol); setDrug(forDrug); setTab("Protein design"); window.scrollTo(0, 0); };
   useEffect(() => { api.status().then(setStatus).catch((e) => setError(e.message)); }, []);
   const setMeds = async (meds) => {
     const r = await api.setMeds(meds);
@@ -563,7 +628,7 @@ export default function App() {
   return (
     <>
       <header className="top">
-        <div className="brand"><span className="mark">Hc</span><div><h1>HealthCheckup</h1><p>Scan what you swallow. See what it does to your medicines.</p></div></div>
+        <div className="brand"><a className="mark" href="/launchpad.html" title="About HealthCheckup">Hc</a><div><h1>HealthCheckup</h1><p>Scan what you swallow. See what it does to your medicines.</p></div></div>
         <nav>
           {TABS.map((t) => <button key={t} className={t === tab ? "active" : ""} onClick={() => setTab(t)}>{t}{t === "My medicines" && status ? ` (${status.meds.length})` : ""}</button>)}
         </nav>
@@ -572,7 +637,7 @@ export default function App() {
       <div className="shell">
         {error && <div className="banner danger">The API is not reachable: {error}. Start it with venv/bin/uvicorn api:app --port 8000.</div>}
         {status && tab === "Scan" && <ScanTab status={status} setMeds={setMeds} onTarget={openTarget} />}
-        {status && tab === "Protein design" && <DesignTab target={target} setTarget={setTarget} />}
+        {status && tab === "Protein design" && <DesignTab target={target} setTarget={setTarget} drug={drug} setDrug={setDrug} />}
         {status && tab === "My medicines" && <MedsTab status={status} setMeds={setMeds} />}
         {status && tab === "Watchlist" && <WatchTab />}
         {status && tab === "Near me" && <LocalTab status={status} />}
